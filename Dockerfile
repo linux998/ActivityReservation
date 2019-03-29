@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
+FROM microsoft/dotnet:2.1-sdk-alpine AS build-env
 WORKDIR /src
 
 # Copy csproj and restore as distinct layers
@@ -17,7 +17,7 @@ COPY . .
 RUN dotnet publish -c Release -o out ActivityReservation/ActivityReservation.csproj
 
 # build runtime image
-FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
+FROM microsoft/dotnet:2.1-aspnetcore-runtime-alpine
 LABEL Maintainer="WeihanLi"
 WORKDIR /app
 COPY --from=build-env /src/ActivityReservation/out .
