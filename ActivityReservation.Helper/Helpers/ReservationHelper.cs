@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WeihanLi.Common;
-using WeihanLi.Redis;
 
 namespace ActivityReservation.Helpers
 {
@@ -141,6 +140,8 @@ namespace ActivityReservation.Helpers
             return false;
         }
 
+        private static readonly object _reservationLock = new object();
+
         /// <summary>
         /// 判断预约是否合法
         /// </summary>
@@ -165,28 +166,20 @@ namespace ActivityReservation.Helpers
                 return false;
             }
 
-            using (var redisLock = RedisManager.GetRedLockClient($"reservation:{reservation.ReservationPlaceId:N}:{reservation.ReservationForDate:yyyyMMdd}"))
+            lock (_reservationLock)
             {
-                if (redisLock.TryLock(TimeSpan.FromSeconds(30)))
+                var reservationForDate = reservation.ReservationForDate;
+                if (!IsReservationForDateAvailable(reservationForDate, isAdmin, out msg))
                 {
-                    var reservationForDate = reservation.ReservationForDate;
-                    if (!IsReservationForDateAvailable(reservationForDate, isAdmin, out msg))
-                    {
-                        return false;
-                    }
-                    if (!IsReservationForPeriodAvailable(reservationForDate, reservation.ReservationPlaceId,
-                        reservation.ReservationForTimeIds))
-                    {
-                        msg = "预约时间段冲突，请重新选择预约时间段";
-                        return false;
-                    }
-                    return true;
-                }
-                else
-                {
-                    msg = "系统繁忙，请稍后重试！";
                     return false;
                 }
+                if (!IsReservationForPeriodAvailable(reservationForDate, reservation.ReservationPlaceId,
+                    reservation.ReservationForTimeIds))
+                {
+                    msg = "预约时间段冲突，请重新选择预约时间段";
+                    return false;
+                }
+                return true;
             }
         }
     }

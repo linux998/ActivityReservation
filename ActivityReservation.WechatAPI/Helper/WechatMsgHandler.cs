@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Xml;
 using ActivityReservation.Common;
+using Microsoft.Extensions.Caching.Memory;
+using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 using WeihanLi.Common.Logging;
 using WeihanLi.Extensions;
-using WeihanLi.Redis;
 
 namespace ActivityReservation.WechatAPI.Helper
 {
@@ -26,11 +27,13 @@ namespace ActivityReservation.WechatAPI.Helper
                 var msgId = xmldoc.SelectSingleNode("/xml/MsgId")?.InnerText;
                 if (msgId.IsNullOrEmpty())
                 {
-                    var firewall = RedisManager.GetFirewallClient($"wechatMsgFirewall-{msgId}", TimeSpan.FromSeconds(2));
-                    if (!firewall.Hit())
+                    var cache = DependencyResolver.Current.ResolveService<IMemoryCache>();
+                    var msgKey = $"wechatMsgFirewall-{msgId}";
+                    if (cache.TryGetValue(msgKey, out _))
                     {
                         return string.Empty;
                     }
+                    cache.Set(msgKey, 1, TimeSpan.FromMinutes(2));
                 }
                 var msgType = xmldoc.SelectSingleNode("/xml/MsgType");
 

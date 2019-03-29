@@ -1,8 +1,9 @@
 ﻿using System;
 using ActivityReservation.WechatAPI.Entities;
+using Microsoft.Extensions.Caching.Memory;
+using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 using WeihanLi.Extensions;
-using WeihanLi.Redis;
 
 namespace ActivityReservation.WechatAPI.Helper
 {
@@ -21,10 +22,15 @@ namespace ActivityReservation.WechatAPI.Helper
         /// <returns>AccessToken</returns>
         public static string GetAccessToken()
         {
-            var token = RedisManager.CacheClient.GetOrSet("wechat_access_token", () => RetryHelper.TryInvoke(() => HttpHelper.HttpGetFor<AccessTokenEntity>(
-                    GetAccessTokenUrlFormat.FormatWith(WeChatConsts.AppId, WeChatConsts.AppSecret)),
-                result => result.AccessToken.IsNotNullOrWhiteSpace()),
-                TimeSpan.FromSeconds(7120));
+            var token = DependencyResolver.Current.ResolveService<IMemoryCache>().GetOrCreate("wechat_access_token",
+                (entry) =>
+                {
+                    var value = RetryHelper.TryInvoke(() => HttpHelper.HttpGetFor<AccessTokenEntity>(
+                            GetAccessTokenUrlFormat.FormatWith(WeChatConsts.AppId, WeChatConsts.AppSecret)),
+                        result => result.AccessToken.IsNotNullOrWhiteSpace());
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(7120);
+                    return value;
+                });
             return token?.AccessToken;
         }
     }

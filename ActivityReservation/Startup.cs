@@ -18,7 +18,6 @@ using Newtonsoft.Json.Serialization;
 using WeihanLi.Common;
 using WeihanLi.Common.Helpers;
 using WeihanLi.Common.Logging;
-using WeihanLi.Redis;
 
 namespace ActivityReservation
 {
@@ -34,9 +33,6 @@ namespace ActivityReservation
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMemoryCache();
-            // services.AddDistributedRedisCache(options => options.Configuration = Configuration.GetConnectionString("Redis"));
-
             services.AddSession();
             services.AddMvc()
                 .AddJsonOptions(options =>
@@ -60,18 +56,9 @@ namespace ActivityReservation
                 });
 
             // addDbContext
-            services.AddDbContextPool<ReservationDbContext>(option => option.UseMySql(Configuration.GetConnectionString("Reservation")));
-            services.AddRedisConfig(options =>
-            {
-#if !DEBUG
-                options.RedisServers = new[]
-                {
-                    new RedisServerConfiguration(Configuration.GetConnectionString("Redis")),
-                };
-#endif
-                options.CachePrefix = "ActivityReservation";
-                options.DefaultDatabase = 2;
-            });
+            services.AddDbContextPool<ReservationDbContext>(option => option.UseSqlite(Configuration.GetConnectionString("Reservation")));
+
+            services.AddMemoryCache();
 
             services.Configure<GeetestOptions>(Configuration.GetSection("Geetest"));
             services.AddGeetestHelper();
@@ -82,7 +69,7 @@ namespace ActivityReservation
             services.AddSingleton<OperLogHelper>();
             services.AddScoped<ReservationHelper>();
             // registerApplicationSettingService
-            services.TryAddSingleton<IApplicationSettingService, ApplicationSettingInRedisService>();
+            services.TryAddSingleton<IApplicationSettingService, ApplicationSettingInMemoryService>();
             // register access control service
             services.AddAccessControlHelper<Filters.AdminPermissionRequireStrategy, Filters.AdminOnlyControlAccessStragety>();
 

@@ -7,7 +7,7 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 variables:
-  tagName: 'latest'
+  tagName: 'standalone'
   imageName: '$(dockerId)/activityreservation:$(tagName)'
 
 steps:

@@ -123,7 +123,7 @@ namespace ActivityReservation.Helpers
                         SettingId = Guid.NewGuid(),
                         SettingName = "SystemContactPhone",
                         DisplayName = "系统联系人联系电话",
-                        SettingValue = "15601655489"
+                        SettingValue = "12345678901"
                     },
                     new SystemSettings
                     {
