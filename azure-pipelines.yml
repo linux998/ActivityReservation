@@ -34,5 +34,6 @@ steps:
     docker push $(latestImageName)
   displayName: 'Push docker image'
   displayName: 'hello'
+  displayName: 'hello'
 
 
