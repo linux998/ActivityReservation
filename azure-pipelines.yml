@@ -33,7 +33,7 @@ steps:
     docker push $(imageName)
     docker push $(latestImageName)
   displayName: 'Push docker image'
-  displayName: 'hello'
-  displayName: 'hello'
+  displayName: 'aaa'
+  displayName: 'bbb'
 
 
