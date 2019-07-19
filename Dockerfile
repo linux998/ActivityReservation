@@ -13,3 +13,5 @@ WORKDIR /app
 COPY --from=build-env /src/ActivityReservation/out .
 EXPOSE 80
 ENTRYPOINT ["dotnet", "ActivityReservation.dll"]
+
+# test
